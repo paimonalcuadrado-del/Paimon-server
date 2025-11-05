@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  paimon-server:
+    build: .
+    container_name: paimon-cloud-storage
+    ports:
+      - "8080:8080"
+    environment:
+      - AUTH_TOKEN=${AUTH_TOKEN}
+      - MEGA_EMAIL=${MEGA_EMAIL}
+      - MEGA_PASSWORD=${MEGA_PASSWORD}
+      - HOST=0.0.0.0
+      - PORT=8080
+      - TEMP_UPLOAD_DIR=temp_uploads
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./temp_uploads:/app/temp_uploads
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
