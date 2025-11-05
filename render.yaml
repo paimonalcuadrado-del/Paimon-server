@@ -1,8 +1,9 @@
 services:
   - type: web
     name: paimon-server
-    runtime: python
+    env: python
     plan: free
+    region: oregon
     buildCommand: pip install --constraint constraints.txt -r requirements.txt
     startCommand: gunicorn -w 4 -k uvicorn.workers.UvicornWorker server:app --bind 0.0.0.0:$PORT
     envVars:
