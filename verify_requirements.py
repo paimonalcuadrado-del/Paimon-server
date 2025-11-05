@@ -18,7 +18,7 @@ def check_file_exists(filename, description):
 def check_content_in_file(filename, content, description):
     """Check if content exists in file"""
     try:
-        with open(filename, 'r') as f:
+        with open(filename, 'r', encoding='utf-8') as f:
             file_content = f.read()
             if content in file_content:
                 print(f"✓ {description}")

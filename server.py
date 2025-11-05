@@ -160,9 +160,13 @@ async def upload_file(
         ) as temp_file:
             temp_file_path = temp_file.name
             
-            # Read and write file content asynchronously
-            content = await file.read()
-            temp_file.write(content)
+            # Read and write file content in chunks for memory efficiency
+            chunk_size = 1024 * 1024  # 1MB chunks
+            while True:
+                chunk = await file.read(chunk_size)
+                if not chunk:
+                    break
+                temp_file.write(chunk)
         
         logger.info(f"File saved temporarily at: {temp_file_path}")
         

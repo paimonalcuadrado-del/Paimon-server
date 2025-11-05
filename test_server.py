@@ -67,76 +67,102 @@ def test_status():
 def test_upload_no_auth():
     """Test upload without authentication"""
     print("\nTesting /upload without auth token...")
-    # Create a test file
-    test_file = Path("/tmp/test_upload.txt")
-    test_file.write_text("This is a test file")
+    # Create a test file in a cross-platform way
+    import tempfile
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as tf:
+        tf.write("This is a test file")
+        test_file = Path(tf.name)
     
-    with open(test_file, 'rb') as f:
-        response = requests.post(
-            f"{BASE_URL}/upload?service=mega",
-            files={"file": f}
-        )
-    
-    assert response.status_code == 401
-    data = response.json()
-    assert "authentication token" in data["detail"].lower()
-    print("✓ Authentication required correctly")
-    return True
+    try:
+        with open(test_file, 'rb') as f:
+            response = requests.post(
+                f"{BASE_URL}/upload?service=mega",
+                files={"file": f}
+            )
+        
+        assert response.status_code == 401
+        data = response.json()
+        assert "authentication token" in data["detail"].lower()
+        print("✓ Authentication required correctly")
+        return True
+    finally:
+        test_file.unlink(missing_ok=True)
+
 
 def test_upload_invalid_token():
     """Test upload with invalid authentication token"""
     print("\nTesting /upload with invalid auth token...")
-    test_file = Path("/tmp/test_upload.txt")
+    import tempfile
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as tf:
+        tf.write("This is a test file")
+        test_file = Path(tf.name)
     
-    with open(test_file, 'rb') as f:
-        response = requests.post(
-            f"{BASE_URL}/upload?service=mega",
-            headers={"X-Auth-Token": "wrong-token"},
-            files={"file": f}
-        )
-    
-    assert response.status_code == 403
-    data = response.json()
-    assert "Invalid authentication token" in data["detail"]
-    print("✓ Invalid token rejected correctly")
-    return True
+    try:
+        with open(test_file, 'rb') as f:
+            response = requests.post(
+                f"{BASE_URL}/upload?service=mega",
+                headers={"X-Auth-Token": "wrong-token"},
+                files={"file": f}
+            )
+        
+        assert response.status_code == 403
+        data = response.json()
+        assert "Invalid authentication token" in data["detail"]
+        print("✓ Invalid token rejected correctly")
+        return True
+    finally:
+        test_file.unlink(missing_ok=True)
+
 
 def test_upload_unsupported_service():
     """Test upload with unsupported service"""
     print("\nTesting /upload with unsupported service...")
-    test_file = Path("/tmp/test_upload.txt")
+    import tempfile
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as tf:
+        tf.write("This is a test file")
+        test_file = Path(tf.name)
     
-    with open(test_file, 'rb') as f:
-        response = requests.post(
-            f"{BASE_URL}/upload?service=dropbox",
-            headers={"X-Auth-Token": AUTH_TOKEN},
-            files={"file": f}
-        )
-    
-    assert response.status_code == 400
-    data = response.json()
-    assert "Unsupported service" in data["detail"]
-    print("✓ Unsupported service rejected correctly")
-    return True
+    try:
+        with open(test_file, 'rb') as f:
+            response = requests.post(
+                f"{BASE_URL}/upload?service=dropbox",
+                headers={"X-Auth-Token": AUTH_TOKEN},
+                files={"file": f}
+            )
+        
+        assert response.status_code == 400
+        data = response.json()
+        assert "Unsupported service" in data["detail"]
+        print("✓ Unsupported service rejected correctly")
+        return True
+    finally:
+        test_file.unlink(missing_ok=True)
+
 
 def test_upload_valid_request():
     """Test upload with valid authentication (will fail due to mega.py issue but should validate request)"""
     print("\nTesting /upload with valid auth token...")
-    test_file = Path("/tmp/test_upload.txt")
+    import tempfile
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as tf:
+        tf.write("This is a test file")
+        test_file = Path(tf.name)
     
-    with open(test_file, 'rb') as f:
-        response = requests.post(
-            f"{BASE_URL}/upload?service=mega",
-            headers={"X-Auth-Token": AUTH_TOKEN},
-            files={"file": f}
-        )
-    
-    # Will fail due to mega.py not being available, but request should be valid
-    # Status code could be 500 due to MEGA service not available
-    print(f"  Response status: {response.status_code}")
-    print(f"  Response: {response.json()}")
-    print("✓ Request properly validated (MEGA service may not be available)")
-    return True
+    try:
+        with open(test_file, 'rb') as f:
+            response = requests.post(
+                f"{BASE_URL}/upload?service=mega",
+                headers={"X-Auth-Token": AUTH_TOKEN},
+                files={"file": f}
+            )
+        
+        # Will fail due to mega.py not being available, but request should be valid
+        # Status code could be 500 due to MEGA service not available
+        print(f"  Response status: {response.status_code}")
+        print(f"  Response: {response.json()}")
+        print("✓ Request properly validated (MEGA service may not be available)")
+        return True
+    finally:
+        test_file.unlink(missing_ok=True)
 
 def main():
     """Run all tests"""

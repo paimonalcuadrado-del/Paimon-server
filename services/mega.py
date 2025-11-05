@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Optional
 import asyncio
 from functools import partial
+import threading
 
 logger = logging.getLogger(__name__)
 
@@ -38,12 +39,14 @@ class MegaService:
         self.password = password
         self._mega_instance = None
         self._logged_in = False
+        self._lock = threading.Lock()  # Thread-safe instance creation
     
     def _get_mega_instance(self) -> Mega:
-        """Get or create MEGA instance."""
-        if self._mega_instance is None:
-            self._mega_instance = Mega()
-        return self._mega_instance
+        """Get or create MEGA instance (thread-safe)."""
+        with self._lock:
+            if self._mega_instance is None:
+                self._mega_instance = Mega()
+            return self._mega_instance
     
     def _login(self) -> bool:
         """

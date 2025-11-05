@@ -50,15 +50,13 @@ bool uploadFile(const std::string& serverUrl, const std::string& authToken,
         return false;
     }
 
-    // Prepare the form data
-    struct curl_httppost* formpost = NULL;
-    struct curl_httppost* lastptr = NULL;
-
+    // Prepare the form data using the newer curl_mime API
+    curl_mime* form = curl_mime_init(curl);
+    curl_mimepart* field = curl_mime_addpart(form);
+    
     // Add file to form
-    curl_formadd(&formpost, &lastptr,
-                 CURLFORM_COPYNAME, "file",
-                 CURLFORM_FILE, filePath.c_str(),
-                 CURLFORM_END);
+    curl_mime_name(field, "file");
+    curl_mime_filedata(field, filePath.c_str());
 
     // Prepare authentication header
     struct curl_slist* headerlist = NULL;
@@ -74,7 +72,7 @@ bool uploadFile(const std::string& serverUrl, const std::string& authToken,
     // Set curl options
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headerlist);
-    curl_easy_setopt(curl, CURLOPT_HTTPPOST, formpost);
+    curl_easy_setopt(curl, CURLOPT_MIMEPOST, form);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
 
@@ -87,7 +85,7 @@ bool uploadFile(const std::string& serverUrl, const std::string& authToken,
 
     // Cleanup
     curl_easy_cleanup(curl);
-    curl_formfree(formpost);
+    curl_mime_free(form);
     curl_slist_free_all(headerlist);
 
     if (res != CURLE_OK) {
