@@ -27,9 +27,11 @@ docker run -p 8080:8080 --env-file .env paimon-server
 ## Manual Deployment
 
 ### 1. Prerequisites
-- Python 3.8-3.11 (3.12+ has compatibility issues with mega.py)
+- Python 3.8+ (Python 3.13+ requires using the provided `constraints.txt` file)
 - pip package manager
 - Virtual environment (recommended)
+
+**Note for Python 3.13+:** The `mega.py` dependency includes `pathlib==1.0.1` which conflicts with the standard library. Use the provided `constraints.txt` file during installation to prevent this issue.
 
 ### 2. Setup
 ```bash
@@ -42,7 +44,7 @@ python3 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
-pip install -r requirements.txt
+pip install --constraint constraints.txt -r requirements.txt
 
 # Configure environment
 cp .env.example .env
@@ -104,9 +106,33 @@ sudo systemctl status paimon-server
 
 ## Cloud Deployment
 
+### Render
+The project includes a `render.yaml` configuration file for easy deployment.
+
+**Option 1: Using render.yaml (Recommended)**
+1. Connect your GitHub repository to Render
+2. Render will automatically detect the `render.yaml` file
+3. Set the environment variables in Render dashboard:
+   - `AUTH_TOKEN`
+   - `MEGA_EMAIL`
+   - `MEGA_PASSWORD`
+4. Deploy
+
+**Option 2: Manual Configuration**
+1. Create a new Web Service on Render
+2. Connect your GitHub repository
+3. Configure:
+   - **Runtime:** Python 3.12
+   - **Build Command:** `pip install --constraint constraints.txt -r requirements.txt`
+   - **Start Command:** `python server.py`
+4. Set environment variables as above
+5. Deploy
+
+**Important:** Always use the `constraints.txt` file during installation to avoid dependency conflicts, especially on newer Python versions.
+
 ### AWS EC2
 1. Launch an EC2 instance (Amazon Linux 2 or Ubuntu)
-2. Install Python 3.11
+2. Install Python 3.11 or 3.12
 3. Follow manual deployment steps
 4. Configure security group to allow inbound traffic on port 8080
 5. (Optional) Set up Nginx as reverse proxy
