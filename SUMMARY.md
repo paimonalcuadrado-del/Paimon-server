@@ -134,7 +134,7 @@ python verify_requirements.py
 - **Async I/O**: aiofiles 23.2.1, asyncio
 - **Cloud Storage**: mega.py 1.0.8
 - **Configuration**: python-dotenv, pydantic-settings
-- **Data Validation**: Pydantic 2.5.0
+- **Data Validation**: Pydantic 2.10.4
 - **File Handling**: python-multipart 0.0.6
 
 ## 📈 Extensibility
