@@ -2,3 +2,7 @@
 # pathlib is part of the Python standard library since Python 3.4
 # The pathlib==1.0.1 package is an unmaintained backport that causes build errors on Python 3.13+
 pathlib
+
+# tenacity 5.x uses deprecated asyncio.coroutine decorator which was removed in Python 3.11
+# Force tenacity >= 8.0.0 for Python 3.11+ compatibility
+tenacity>=8.0.0
