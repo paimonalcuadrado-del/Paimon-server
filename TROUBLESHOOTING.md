@@ -54,7 +54,64 @@ The repository includes a `render.yaml` configuration file that:
 **Manual Configuration (if not using render.yaml):**
 - **Build Command:** `pip install --constraint constraints.txt -r requirements.txt`
 - **Python Version:** 3.12.3 or 3.11.x
-- **Start Command:** `python server.py`
+- **Start Command:** `gunicorn -w 4 -k uvicorn.workers.UvicornWorker server:app --bind 0.0.0.0:$PORT`
+
+### Render ModuleNotFoundError: No module named 'your_application'
+
+**Error Message:**
+```
+==> Running 'gunicorn your_application.wsgi'
+...
+ModuleNotFoundError: No module named 'your_application'
+```
+
+**Root Cause:**
+This error occurs when Render is using a cached or default configuration instead of the `render.yaml` file. The command `gunicorn your_application.wsgi` is a placeholder/template that should be replaced with the actual application command.
+
+**Solutions:**
+
+**1. For Existing Services (Most Common):**
+If you created the Render service before the `render.yaml` file was added, you need to manually update the Start Command in the Render dashboard:
+
+1. Go to your Render Dashboard
+2. Select your service
+3. Go to "Settings"
+4. Under "Build & Deploy", update the **Start Command** to:
+   ```
+   gunicorn -w 4 -k uvicorn.workers.UvicornWorker server:app --bind 0.0.0.0:$PORT
+   ```
+5. Save changes and trigger a manual deploy
+
+**2. For New Deployments:**
+If you're creating a new service, ensure the `render.yaml` file is present in your repository root before connecting to Render. Render will automatically detect and use it.
+
+**3. Verify render.yaml Configuration:**
+Ensure your `render.yaml` file has the correct structure:
+```yaml
+services:
+  - type: web
+    name: paimon-server
+    env: python
+    plan: free
+    region: oregon
+    buildCommand: pip install --constraint constraints.txt -r requirements.txt
+    startCommand: gunicorn -w 4 -k uvicorn.workers.UvicornWorker server:app --bind 0.0.0.0:$PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.3
+      - key: AUTH_TOKEN
+        sync: false
+      - key: MEGA_EMAIL
+        sync: false
+      - key: MEGA_PASSWORD
+        sync: false
+    healthCheckPath: /ping
+```
+
+**Important Notes:**
+- Use `env: python` (not `runtime: python`)
+- The start command must reference `server:app` (the FastAPI application object in server.py)
+- Do not use `python server.py` for production deployments on Render; always use gunicorn with uvicorn workers
 
 ### Docker Build Issues
 
