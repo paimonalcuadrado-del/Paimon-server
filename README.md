@@ -288,15 +288,22 @@ pip install --constraint constraints.txt -r requirements.txt
 
 This prevents installation of the `pathlib` backport package, which is unnecessary for Python 3.4+ as pathlib is included in the standard library.
 
-### MEGA.py Compatibility (Python 3.12+)
-If you encounter an `AttributeError: module 'asyncio' has no attribute 'coroutine'` error when using Python 3.12+, this is due to a compatibility issue with the `tenacity` dependency of `mega.py`. 
+### MEGA.py Compatibility - asyncio.coroutine Error (Fixed)
+If you encounter an `AttributeError: module 'asyncio' has no attribute 'coroutine'` error when using Python 3.11+, this is due to the `mega.py` package installing an old version of `tenacity` (5.1.5) that uses the deprecated `@asyncio.coroutine` decorator.
 
-**Workaround:**
-1. The server will still start and all endpoints will work
-2. MEGA uploads will fail until the dependency is updated
-3. To fix: Wait for `mega.py` to update its `tenacity` dependency, or use Python 3.11 or earlier
+**Solution:**
+Use the provided `constraints.txt` file during installation, which forces `tenacity>=8.0.0`:
+```bash
+pip install --constraint constraints.txt -r requirements.txt
+```
 
-The server is designed to handle this gracefully and will log warnings about MEGA not being available.
+The newer tenacity versions (8.0.0+) use modern async/await syntax and are fully compatible with Python 3.11+.
+
+**Manual Fix (if already installed without constraints):**
+```bash
+pip uninstall -y tenacity
+pip install --constraint constraints.txt -r requirements.txt
+```
 
 ## 🔧 Troubleshooting
 
