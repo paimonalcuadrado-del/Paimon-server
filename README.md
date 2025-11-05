@@ -298,6 +298,16 @@ If you encounter an `AttributeError: module 'asyncio' has no attribute 'coroutin
 
 The server is designed to handle this gracefully and will log warnings about MEGA not being available.
 
+## 🔧 Troubleshooting
+
+For detailed troubleshooting guides and solutions to common issues, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
+
+Quick links:
+- [Python 3.13+ build errors](TROUBLESHOOTING.md#python-313-metadata-preparation-error)
+- [Render deployment issues](TROUBLESHOOTING.md#render-deployment-failure)
+- [MEGA upload failures](TROUBLESHOOTING.md#mega-upload-failures-python-312)
+- [Runtime errors](TROUBLESHOOTING.md#runtime-issues)
+
 ## 🗺️ Roadmap
 
 - [ ] Add Google Drive support
