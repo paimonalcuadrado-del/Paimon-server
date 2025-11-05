@@ -1,6 +1,16 @@
-# Fix for Python 3.13+ Build Error - Solution Summary
+# Fix for Python 3.11+ Runtime and Build Errors - Solution Summary
 
-## Problem Statement
+## Problem Statements
+
+### Problem 1: Runtime Error - asyncio.coroutine AttributeError
+When starting the server with gunicorn on Python 3.11+ (including 3.12 and 3.13), the server fails to start with:
+```
+AttributeError: module 'asyncio' has no attribute 'coroutine'. Did you mean: 'coroutines'?
+```
+
+This occurs when importing the `mega` module, preventing the entire server from starting.
+
+### Problem 2: Build Error on Python 3.13+
 When deploying the Paimon-server on Python 3.13+ environments (particularly Render), the build fails with:
 ```
 Preparing metadata (pyproject.toml): finished with status 'error'
@@ -12,6 +22,15 @@ Caused by: Read-only file system (os error 30)
 ```
 
 ## Root Cause Analysis
+
+### Runtime Error Root Cause
+1. **Old Tenacity Version**: The `mega.py==1.0.8` package depends on `tenacity` without specifying a version constraint
+2. **Default to Old Version**: Without constraints, pip installs `tenacity==5.1.5` (from 2019)
+3. **Deprecated Decorator**: `tenacity==5.1.5` uses `@asyncio.coroutine` decorator in its `_asyncio.py` module
+4. **Python 3.11+ Breaking Change**: The `asyncio.coroutine` decorator was removed in Python 3.11
+5. **Import Failure**: When `mega.py` tries to import `tenacity`, the AttributeError occurs, preventing server startup
+
+### Build Error Root Cause
 1. **Pydantic Compatibility**: The original `pydantic==2.5.0` requires `pydantic-core==2.14.1`, which doesn't have pre-built wheels for Python 3.13
 2. **Rust Build Requirement**: Without pre-built wheels, pydantic-core must be compiled from source using Rust/Cargo
 3. **Dependency Chain**: The `mega.py==1.0.8` package has a hard dependency on `pathlib==1.0.1`
@@ -30,15 +49,25 @@ Updated pydantic to versions with Python 3.13 pre-built wheels:
 These versions (pydantic ≥ 2.8.0) include pre-built wheels for Python 3.13, eliminating the need for Rust compilation.
 
 ### 2. Constraints File (constraints.txt)
-Created a pip constraints file that prevents installation of the pathlib package:
+Updated the pip constraints file to handle two compatibility issues:
+
+1. **Pathlib backport**: Prevents installation of `pathlib==1.0.1`
+2. **Tenacity version**: Forces `tenacity>=8.0.0` for Python 3.11+ compatibility
+
 ```
 # Constraints file to prevent installation of packages that conflict with Python stdlib
 # pathlib is part of the Python standard library since Python 3.4
 # The pathlib==1.0.1 package is an unmaintained backport that causes build errors on Python 3.13+
 pathlib
+
+# tenacity 5.x uses deprecated asyncio.coroutine decorator which was removed in Python 3.11
+# Force tenacity >= 8.0.0 for Python 3.11+ compatibility
+tenacity>=8.0.0
 ```
 
-**How it works**: When pip installs dependencies with `--constraint constraints.txt`, it will skip any package named "pathlib", allowing the stdlib version to be used instead.
+**How it works**: 
+- When pip installs dependencies with `--constraint constraints.txt`, it will skip any package named "pathlib", allowing the stdlib version to be used instead
+- It also ensures that tenacity 8.0.0 or higher is installed, which uses modern async/await syntax compatible with Python 3.11+
 
 ### 3. Updated Installation Process
 Modified all installation instructions to use:
