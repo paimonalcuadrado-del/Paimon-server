@@ -73,7 +73,7 @@ docker build -t paimon-server .
 
 ## Runtime Issues
 
-### MEGA Upload Failures (Python 3.12+)
+### MEGA Upload Failures (asyncio.coroutine AttributeError)
 
 **Error Message:**
 ```
@@ -81,7 +81,7 @@ AttributeError: module 'asyncio' has no attribute 'coroutine'
 ```
 
 **Root Cause:**
-The `tenacity` dependency used by `mega.py` has compatibility issues with Python 3.12+'s asyncio changes.
+The `tenacity` dependency used by `mega.py` has compatibility issues with asyncio changes in Python 3.12+. The `asyncio.coroutine` decorator was removed in Python 3.11.
 
 **Workaround:**
 1. Server will start and health endpoints will work
