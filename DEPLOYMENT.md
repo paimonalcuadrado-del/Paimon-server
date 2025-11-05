@@ -122,13 +122,16 @@ The project includes a `render.yaml` configuration file for easy deployment.
 1. Create a new Web Service on Render
 2. Connect your GitHub repository
 3. Configure:
-   - **Runtime:** Python 3.12
+   - **Environment:** Python 3
    - **Build Command:** `pip install --constraint constraints.txt -r requirements.txt`
-   - **Start Command:** `python server.py`
+   - **Start Command:** `gunicorn -w 4 -k uvicorn.workers.UvicornWorker server:app --bind 0.0.0.0:$PORT`
 4. Set environment variables as above
 5. Deploy
 
-**Important:** Always use the `constraints.txt` file during installation to avoid dependency conflicts, especially on newer Python versions.
+**Important Notes:**
+- Always use the `constraints.txt` file during installation to avoid dependency conflicts, especially on newer Python versions.
+- If you have an existing Render service that was created before `render.yaml` was added, you may need to manually update the Start Command in the Render dashboard to: `gunicorn -w 4 -k uvicorn.workers.UvicornWorker server:app --bind 0.0.0.0:$PORT`
+- For new deployments, Render will automatically use the `render.yaml` configuration.
 
 ### AWS EC2
 1. Launch an EC2 instance (Amazon Linux 2 or Ubuntu)
