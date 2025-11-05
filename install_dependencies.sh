@@ -19,6 +19,9 @@ echo "Python version: $PYTHON_VERSION"
 # Step 1: Install main dependencies (without mega.py)
 echo ""
 echo "Step 1: Installing main dependencies..."
+# Note: Package versions are duplicated here from requirements.txt to ensure
+# compatibility during the phased installation process. This is necessary because
+# we need to install mega.py separately with --no-deps to avoid tenacity downgrade.
 pip install --constraint constraints.txt \
     fastapi==0.104.1 \
     uvicorn[standard]==0.24.0 \
@@ -55,18 +58,24 @@ TENACITY_VERSION=$(python3 -c "import importlib.metadata; print(importlib.metada
 echo "✓ tenacity version: $TENACITY_VERSION"
 
 # Test mega import
-if python3 -c "from mega import Mega" 2>/dev/null; then
+echo -n "Testing mega.py import... "
+if python3 -c "from mega import Mega" 2>&1 | tee /tmp/mega_import_error.txt | grep -q "^$"; then
     echo "✓ mega.Mega import successful"
 else
     echo "✗ mega.Mega import failed"
+    echo "Error details:"
+    cat /tmp/mega_import_error.txt
     exit 1
 fi
 
 # Test server import
-if python3 -c "import server" 2>/dev/null; then
+echo -n "Testing server module import... "
+if python3 -c "import server" 2>&1 | tee /tmp/server_import_error.txt | grep -q "^$"; then
     echo "✓ server module import successful"
 else
     echo "✗ server module import failed"
+    echo "Error details:"
+    cat /tmp/server_import_error.txt
     exit 1
 fi
 

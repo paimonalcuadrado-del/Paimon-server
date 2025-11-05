@@ -43,7 +43,6 @@ else:
 
 print()
 print("=" * 70)
-print(f"Status: Python {sys.version_info.major}.{sys.version_info.minor} " + 
-      ("requires" if sys.version_info >= (3, 11) else "does not require") + 
-      " tenacity >= 8.0.0")
+status = "requires" if sys.version_info >= (3, 11) else "does not require"
+print(f"Status: Python {sys.version_info.major}.{sys.version_info.minor} {status} tenacity >= 8.0.0")
 print("=" * 70)

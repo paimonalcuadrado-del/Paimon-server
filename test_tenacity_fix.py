@@ -34,8 +34,16 @@ def main():
         tenacity_version = importlib.metadata.version('tenacity')
         print(f"Tenacity version: {tenacity_version}")
         
-        # Parse version
-        major_version = int(tenacity_version.split('.')[0])
+        # Parse version using packaging library for robustness
+        try:
+            from packaging import version
+            parsed_version = version.parse(tenacity_version)
+            # Get the major version from the base_version (strips pre-release/dev suffixes)
+            major_version = int(str(parsed_version.major))
+        except ImportError:
+            # Fallback to simple parsing if packaging is not available
+            # This handles most common version formats (X.Y.Z)
+            major_version = int(tenacity_version.split('.')[0].split('rc')[0].split('dev')[0])
         
         if major_version < 8:
             print(f"❌ FAILED: tenacity {tenacity_version} uses asyncio.coroutine (removed in Python 3.11)")
