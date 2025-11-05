@@ -164,19 +164,31 @@ The `mega.py==1.0.8` package depends on `tenacity` without specifying a version 
 **Solution:**
 The repository's `constraints.txt` file has been updated to force `tenacity>=8.0.0`, which uses modern async/await syntax and is compatible with Python 3.11+.
 
-When installing dependencies, always use the constraints file:
+**Recommended: Use the automated installation script**
+```bash
+bash install_dependencies.sh
+```
+
+This script handles the dependency conflict by installing packages in the correct order.
+
+**Alternative: Manual installation with constraints**
 ```bash
 pip install --constraint constraints.txt -r requirements.txt
 ```
 
+⚠️ **Note**: You may encounter a pip dependency resolution error because `mega.py==1.0.8` explicitly requires `tenacity<6.0.0`. If this happens, use the `install_dependencies.sh` script which installs dependencies in the correct order to work around this constraint.
+
 **Manual Fix (if you installed without constraints):**
 If you already installed without constraints and are seeing this error:
 ```bash
-# Uninstall the old tenacity version
-pip uninstall -y tenacity
+# Option 1: Use the install script
+bash install_dependencies.sh
 
-# Reinstall with constraints
-pip install --constraint constraints.txt -r requirements.txt
+# Option 2: Manual fix
+pip uninstall -y tenacity mega.py
+pip install 'tenacity>=8.0.0'
+pip install --no-deps mega.py==1.0.8
+pip install pycryptodome requests
 ```
 
 **Verification:**
@@ -184,6 +196,9 @@ After installation, verify you have tenacity 8.0.0 or higher:
 ```bash
 pip show tenacity | grep Version
 # Should show: Version: 8.x.x or higher
+
+# Run the verification script
+python3 test_tenacity_fix.py
 ```
 
 ### Missing Environment Variables

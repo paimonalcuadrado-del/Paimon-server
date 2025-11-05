@@ -28,11 +28,24 @@ cd Paimon-server
 ```
 
 2. Install dependencies:
+
+**Option A: Automated installation (recommended for Python 3.11+)**
+```bash
+bash install_dependencies.sh
+```
+
+This script installs dependencies in the correct order to ensure compatibility with Python 3.11+, specifically handling the `tenacity` version requirement for `mega.py`.
+
+**Option B: Manual installation**
 ```bash
 pip install --constraint constraints.txt -r requirements.txt
 ```
 
-**Note:** The `constraints.txt` file prevents installation of packages that conflict with the Python standard library (like the `pathlib` backport), especially important for Python 3.13+.
+⚠️ **Note for Python 3.11+**: If you encounter a dependency conflict with `tenacity`, use the automated installation script (`install_dependencies.sh`) which installs dependencies in the correct order to work around `mega.py`'s strict version constraints.
+
+**What the constraints.txt file does:**
+- Prevents installation of the `pathlib` backport package (important for Python 3.13+)
+- Ensures `tenacity>=8.0.0` for Python 3.11+ compatibility (fixes `asyncio.coroutine` AttributeError)
 
 3. Configure environment variables:
 ```bash
