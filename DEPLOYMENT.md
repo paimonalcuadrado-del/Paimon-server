@@ -144,7 +144,7 @@ The project includes both a `Procfile` and `render.yaml` configuration file for 
 5. (Optional) Set up Nginx as reverse proxy
 
 ### Heroku
-The repository includes a `Procfile` for deployment. The Procfile uses gunicorn with uvicorn workers for better performance:
+The repository includes a `Procfile` for deployment. The Procfile uses gunicorn with uvicorn workers (production-ready configuration):
 
 ```bash
 # Deploy (Procfile is already included)
