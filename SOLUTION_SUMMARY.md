@@ -12,15 +12,24 @@ Caused by: Read-only file system (os error 30)
 ```
 
 ## Root Cause Analysis
-1. **Dependency Chain**: The `mega.py==1.0.8` package has a hard dependency on `pathlib==1.0.1`
-2. **Unnecessary Backport**: `pathlib==1.0.1` is an unmaintained backport of the pathlib module
-3. **Already in stdlib**: Since Python 3.4, pathlib has been included in the Python standard library
-4. **Build Conflict**: On Python 3.13+, attempting to install the pathlib backport triggers unexpected build behavior involving maturin and Rust compilation
-5. **Read-only Filesystem**: In restricted build environments (like Render), the Rust/Cargo build process fails due to read-only filesystem restrictions
+1. **Pydantic Compatibility**: The original `pydantic==2.5.0` requires `pydantic-core==2.14.1`, which doesn't have pre-built wheels for Python 3.13
+2. **Rust Build Requirement**: Without pre-built wheels, pydantic-core must be compiled from source using Rust/Cargo
+3. **Dependency Chain**: The `mega.py==1.0.8` package has a hard dependency on `pathlib==1.0.1`
+4. **Unnecessary Backport**: `pathlib==1.0.1` is an unmaintained backport of the pathlib module
+5. **Already in stdlib**: Since Python 3.4, pathlib has been included in the Python standard library
+6. **Build Conflict**: On Python 3.13+, attempting to install the pathlib backport triggers unexpected build behavior involving maturin and Rust compilation
+7. **Read-only Filesystem**: In restricted build environments (like Render), the Rust/Cargo build process fails due to read-only filesystem restrictions
 
 ## Solution Implemented
 
-### 1. Constraints File (constraints.txt)
+### 1. Upgraded Pydantic Dependencies
+Updated pydantic to versions with Python 3.13 pre-built wheels:
+- `pydantic==2.5.0` → `pydantic==2.10.4`
+- `pydantic-settings==2.1.0` → `pydantic-settings==2.10.1`
+
+These versions (pydantic ≥ 2.8.0) include pre-built wheels for Python 3.13, eliminating the need for Rust compilation.
+
+### 2. Constraints File (constraints.txt)
 Created a pip constraints file that prevents installation of the pathlib package:
 ```
 # Constraints file to prevent installation of packages that conflict with Python stdlib
@@ -31,7 +40,7 @@ pathlib
 
 **How it works**: When pip installs dependencies with `--constraint constraints.txt`, it will skip any package named "pathlib", allowing the stdlib version to be used instead.
 
-### 2. Updated Installation Process
+### 3. Updated Installation Process
 Modified all installation instructions to use:
 ```bash
 pip install --constraint constraints.txt -r requirements.txt
@@ -43,14 +52,14 @@ pip install --constraint constraints.txt -r requirements.txt
 - Dockerfile
 - render.yaml (new)
 
-### 3. Render Configuration (render.yaml)
+### 4. Render Configuration (render.yaml)
 Created a Render-specific configuration file that:
 - Specifies Python 3.12.3 (more stable than 3.13 for this application)
 - Uses the constraints file during build
 - Configures proper health checks
 - Documents required environment variables
 
-### 4. Comprehensive Documentation
+### 5. Comprehensive Documentation
 
 **TROUBLESHOOTING.md**: New comprehensive troubleshooting guide covering:
 - Python 3.13+ metadata preparation errors
@@ -67,16 +76,18 @@ Created a Render-specific configuration file that:
 ## Technical Details
 
 ### Why This Solution Works
-1. **No Code Changes**: The application code doesn't need modification
-2. **Transparent to Application**: The app imports pathlib normally, gets stdlib version
-3. **Backwards Compatible**: Works with Python 3.8+ (all versions have pathlib in stdlib since 3.4)
-4. **Minimal Overhead**: Only adds a small constraints file
+1. **Pre-built Wheels**: Pydantic 2.10.4+ provides pre-built wheels for Python 3.13, avoiding Rust compilation
+2. **No Code Changes**: The application code doesn't need modification (already uses Pydantic v2 API)
+3. **Transparent to Application**: The app imports pathlib normally, gets stdlib version
+4. **Backwards Compatible**: Works with Python 3.8+ (all versions have pathlib in stdlib since 3.4)
+5. **Minimal Overhead**: Only adds a small constraints file
 
-### Why Pathlib Backport Causes Issues
-1. **Metadata Preparation**: Modern pip tries to prepare package metadata before installation
-2. **Broken Build System**: The pathlib 1.0.1 package may have metadata issues on Python 3.13+
-3. **Maturin False Trigger**: Something in the build process incorrectly invokes maturin (Rust build tool)
-4. **Filesystem Restrictions**: Rust/Cargo needs to write to cache directories, which fails in read-only environments
+### Why Pydantic and Pathlib Backport Cause Issues
+1. **Missing Pre-built Wheels**: Old pydantic-core versions (< 2.18.3) lack Python 3.13 wheels, requiring Rust compilation
+2. **Metadata Preparation**: Modern pip tries to prepare package metadata before installation
+3. **Broken Build System**: The pathlib 1.0.1 package may have metadata issues on Python 3.13+
+4. **Maturin False Trigger**: Something in the build process incorrectly invokes maturin (Rust build tool)
+5. **Filesystem Restrictions**: Rust/Cargo needs to write to cache directories, which fails in read-only environments
 
 ## Verification
 
@@ -98,35 +109,43 @@ pip list | grep pathlib
 
 ### What Changed in Each File
 
-1. **constraints.txt** (NEW)
+1. **requirements.txt** (MODIFIED)
+   - Updated `pydantic==2.5.0` → `pydantic==2.10.4`
+   - Updated `pydantic-settings==2.1.0` → `pydantic-settings==2.10.1`
+
+2. **constraints.txt** (EXISTING)
    - Prevents pathlib installation
 
-2. **render.yaml** (NEW)
+3. **render.yaml** (EXISTING)
    - Render deployment configuration
    - Python 3.12.3
    - Uses constraints during build
 
-3. **Dockerfile** (MODIFIED)
+4. **Dockerfile** (EXISTING)
    - Copies constraints.txt
    - Uses constraints during pip install
 
-4. **README.md** (MODIFIED)
+5. **README.md** (EXISTING)
    - Updated installation instructions
    - Added Python 3.13+ note
    - Added troubleshooting section link
    - Updated Known Issues
 
-5. **DEPLOYMENT.md** (MODIFIED)
+6. **DEPLOYMENT.md** (EXISTING)
    - Added Render deployment section
    - Updated prerequisites
    - Modified all pip install commands
 
-6. **TROUBLESHOOTING.md** (NEW)
-   - Comprehensive troubleshooting guide
+7. **TROUBLESHOOTING.md** (MODIFIED)
+   - Updated to mention pydantic version requirements
    - Solutions for common issues
    - Quick verification commands
 
-7. **test_pathlib.py** (NEW)
+8. **SOLUTION_SUMMARY.md** (MODIFIED)
+   - Updated to reflect pydantic upgrade
+   - Explains both fixes (pydantic upgrade + constraints)
+
+9. **test_pathlib.py** (EXISTING)
    - Verification script
    - Checks pathlib source
    - Clear pass/fail output

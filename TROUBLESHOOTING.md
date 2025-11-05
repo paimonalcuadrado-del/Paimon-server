@@ -16,11 +16,12 @@ error: failed to create directory `/usr/local/cargo/registry/cache/...`
 Caused by: Read-only file system (os error 30)
 ```
 
-**Root Cause:**
-The `mega.py` package depends on `pathlib==1.0.1`, which is an unmaintained backport of the pathlib module. Since Python 3.4, pathlib is included in the standard library, making this backport unnecessary and potentially problematic. On Python 3.13+, attempting to install this backport can trigger build errors involving maturin and Rust.
+**Root Causes:**
+1. **Pydantic Compatibility**: Older versions of pydantic (< 2.8.0) and pydantic-core (< 2.18.3) don't have pre-built wheels for Python 3.13, requiring Rust compilation which fails in read-only environments.
+2. **Pathlib Backport**: The `mega.py` package depends on `pathlib==1.0.1`, which is an unmaintained backport that conflicts with the Python standard library on Python 3.13+.
 
 **Solution:**
-Use the provided `constraints.txt` file when installing dependencies:
+The requirements have been updated to use pydantic 2.10.4+ which includes pre-built wheels for Python 3.13. Additionally, use the provided `constraints.txt` file when installing dependencies:
 
 ```bash
 pip install --constraint constraints.txt -r requirements.txt
