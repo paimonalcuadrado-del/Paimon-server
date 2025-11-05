@@ -68,10 +68,24 @@ ModuleNotFoundError: No module named 'your_application'
 **Root Cause:**
 This error occurs when Render is using a cached or default configuration instead of the `render.yaml` file. The command `gunicorn your_application.wsgi` is a placeholder/template that should be replaced with the actual application command.
 
-**Solutions:**
+**Solution:**
+This repository now includes a `Procfile` that explicitly specifies the start command. Render gives Procfile the highest priority, so it will always use the correct command regardless of cached configurations or manual dashboard settings.
 
-**1. For Existing Services (Most Common):**
-If you created the Render service before the `render.yaml` file was added, you need to manually update the Start Command in the Render dashboard:
+The Procfile contains:
+```
+web: gunicorn -w 4 -k uvicorn.workers.UvicornWorker server:app --bind 0.0.0.0:$PORT
+```
+
+**Manual Fixes (if Procfile doesn't work):**
+
+**1. For Existing Services:**
+If you created the Render service before the `Procfile` was added, you may need to trigger a new deployment:
+
+1. Push your latest code (including the Procfile) to the repository
+2. Render should automatically detect and use the Procfile on the next deployment
+
+**2. Alternative - Update Dashboard Settings:**
+If issues persist, manually update the Start Command in the Render dashboard:
 
 1. Go to your Render Dashboard
 2. Select your service
@@ -82,11 +96,15 @@ If you created the Render service before the `render.yaml` file was added, you n
    ```
 5. Save changes and trigger a manual deploy
 
-**2. For New Deployments:**
-If you're creating a new service, ensure the `render.yaml` file is present in your repository root before connecting to Render. Render will automatically detect and use it.
+**3. Verify Configuration Files:**
+Ensure your repository has the correct configuration files:
 
-**3. Verify render.yaml Configuration:**
-Ensure your `render.yaml` file has the correct structure:
+- **Procfile** (highest priority):
+  ```
+  web: gunicorn -w 4 -k uvicorn.workers.UvicornWorker server:app --bind 0.0.0.0:$PORT
+  ```
+
+- **render.yaml** (blueprint specification):
 ```yaml
 services:
   - type: web
@@ -109,7 +127,9 @@ services:
 ```
 
 **Important Notes:**
-- Use `env: python` (not `runtime: python`)
+- Render uses the following priority: **Procfile** > Manual Dashboard Settings > render.yaml
+- The repository includes a Procfile to ensure consistent deployments
+- Use `env: python` (not `runtime: python`) in render.yaml
 - The start command must reference `server:app` (the FastAPI application object in server.py)
 - Do not use `python server.py` for production deployments on Render; always use gunicorn with uvicorn workers
 

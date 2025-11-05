@@ -107,11 +107,13 @@ sudo systemctl status paimon-server
 ## Cloud Deployment
 
 ### Render
-The project includes a `render.yaml` configuration file for easy deployment.
+The project includes both a `Procfile` and `render.yaml` configuration file for easy deployment.
 
-**Option 1: Using render.yaml (Recommended)**
+**Option 1: Automatic Deployment (Recommended)**
 1. Connect your GitHub repository to Render
-2. Render will automatically detect the `render.yaml` file
+2. Render will automatically detect:
+   - `Procfile` (specifies the start command)
+   - `render.yaml` (provides full service configuration including environment variables)
 3. Set the environment variables in Render dashboard:
    - `AUTH_TOKEN`
    - `MEGA_EMAIL`
@@ -129,9 +131,10 @@ The project includes a `render.yaml` configuration file for easy deployment.
 5. Deploy
 
 **Important Notes:**
-- Always use the `constraints.txt` file during installation to avoid dependency conflicts, especially on newer Python versions.
-- If you have an existing Render service that was created before `render.yaml` was added, you may need to manually update the Start Command in the Render dashboard to: `gunicorn -w 4 -k uvicorn.workers.UvicornWorker server:app --bind 0.0.0.0:$PORT`
-- For new deployments, Render will automatically use the `render.yaml` configuration.
+- The repository includes a `Procfile` to ensure consistent deployments (Render gives Procfile highest priority)
+- Always use the `constraints.txt` file during installation to avoid dependency conflicts, especially on newer Python versions
+- If you have an existing Render service with deployment issues, the `Procfile` will automatically fix the start command on the next deployment
+- For troubleshooting, see the [TROUBLESHOOTING.md](TROUBLESHOOTING.md) guide
 
 ### AWS EC2
 1. Launch an EC2 instance (Amazon Linux 2 or Ubuntu)
@@ -141,17 +144,18 @@ The project includes a `render.yaml` configuration file for easy deployment.
 5. (Optional) Set up Nginx as reverse proxy
 
 ### Heroku
-```bash
-# Create Procfile
-echo "web: uvicorn server:app --host 0.0.0.0 --port \$PORT" > Procfile
+The repository includes a `Procfile` for deployment. The Procfile uses gunicorn with uvicorn workers for better performance:
 
-# Deploy
+```bash
+# Deploy (Procfile is already included)
 heroku create paimon-server
 heroku config:set AUTH_TOKEN=your-token
 heroku config:set MEGA_EMAIL=your-email
 heroku config:set MEGA_PASSWORD=your-password
 git push heroku main
 ```
+
+**Note:** The included Procfile uses the production-ready configuration with gunicorn. If you need a different configuration, you can modify the Procfile locally.
 
 ### DigitalOcean App Platform
 1. Connect your GitHub repository
