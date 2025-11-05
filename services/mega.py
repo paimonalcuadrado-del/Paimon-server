@@ -5,11 +5,19 @@ Handles file uploads to MEGA using mega.py library.
 import logging
 from pathlib import Path
 from typing import Optional
-from mega import Mega
 import asyncio
 from functools import partial
 
 logger = logging.getLogger(__name__)
+
+# Try to import mega.py, but gracefully handle if not available
+try:
+    from mega import Mega
+    MEGA_AVAILABLE = True
+except ImportError:
+    logger.warning("mega.py not available. MEGA service will not function.")
+    Mega = None
+    MEGA_AVAILABLE = False
 
 
 class MegaService:
@@ -23,6 +31,9 @@ class MegaService:
             email: MEGA account email
             password: MEGA account password
         """
+        if not MEGA_AVAILABLE:
+            logger.error("MEGA service initialized but mega.py is not available")
+        
         self.email = email
         self.password = password
         self._mega_instance = None
@@ -68,6 +79,10 @@ class MegaService:
         Returns:
             Optional[str]: Public link to the uploaded file, or None if upload failed
         """
+        if not MEGA_AVAILABLE:
+            logger.error("Cannot upload to MEGA: mega.py library not available")
+            return None
+            
         try:
             # Run blocking MEGA operations in thread pool
             loop = asyncio.get_event_loop()

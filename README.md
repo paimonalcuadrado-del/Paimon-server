@@ -203,6 +203,18 @@ LOG_LEVEL=INFO  # Options: DEBUG, INFO, WARNING, ERROR, CRITICAL
 
 ## 🧪 Testing
 
+### Run the test suite:
+```bash
+python test_server.py
+```
+
+This will test all endpoints including:
+- `/ping` - Connectivity test
+- `/status` - Health check
+- `/upload` - File upload with various scenarios (auth, validation, etc.)
+
+### Manual testing with curl:
+
 Test the server with curl:
 
 ```bash
@@ -216,6 +228,21 @@ curl http://localhost:8080/status
 curl -X POST "http://localhost:8080/upload?service=mega" \
   -H "X-Auth-Token: your-secret-auth-token-here" \
   -F "file=@test.txt"
+```
+
+### C++ Client Example
+
+A complete C++ client example is provided in `client_example.cpp`. Compile and use it:
+
+```bash
+# Compile
+g++ -o client client_example.cpp -lcurl
+
+# Test connectivity
+./client ping
+
+# Upload a file
+./client /path/to/file.txt
 ```
 
 ## 📦 Dependencies
@@ -246,7 +273,15 @@ This project is open source and available under the MIT License.
 
 ## 🐛 Known Issues
 
-None at the moment. Please report any issues on GitHub.
+### MEGA.py Compatibility (Python 3.12+)
+If you encounter an `AttributeError: module 'asyncio' has no attribute 'coroutine'` error when using Python 3.12+, this is due to a compatibility issue with the `tenacity` dependency of `mega.py`. 
+
+**Workaround:**
+1. The server will still start and all endpoints will work
+2. MEGA uploads will fail until the dependency is updated
+3. To fix: Wait for `mega.py` to update its `tenacity` dependency, or use Python 3.11 or earlier
+
+The server is designed to handle this gracefully and will log warnings about MEGA not being available.
 
 ## 🗺️ Roadmap
 
