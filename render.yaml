@@ -8,7 +8,7 @@ services:
     startCommand: gunicorn -w 4 -k uvicorn.workers.UvicornWorker server:app --bind 0.0.0.0:$PORT
     envVars:
       - key: PYTHON_VERSION
-        value: 3.12.3
+        value: "3.11.4"
       - key: AUTH_TOKEN
         sync: false
       - key: MEGA_EMAIL
