@@ -14,8 +14,10 @@ A fully optimized Python backend server that acts as an intermediary storage API
 
 ## 📋 Requirements
 
-- Python 3.8+
+- Python 3.8+ (see note below for Python 3.13+)
 - MEGA account (for MEGA storage service)
+
+**Note for Python 3.13+:** When using Python 3.13 or later, you must use the `constraints.txt` file during installation to avoid conflicts with stdlib packages.
 
 ## 🔧 Installation
 
@@ -27,8 +29,10 @@ cd Paimon-server
 
 2. Install dependencies:
 ```bash
-pip install -r requirements.txt
+pip install --constraint constraints.txt -r requirements.txt
 ```
+
+**Note:** The `constraints.txt` file prevents installation of packages that conflict with the Python standard library (like the `pathlib` backport), especially important for Python 3.13+.
 
 3. Configure environment variables:
 ```bash
@@ -272,6 +276,17 @@ This project is open source and available under the MIT License.
 - paimonalcuadrado-del
 
 ## 🐛 Known Issues
+
+### Python 3.13+ Build Error (Fixed)
+If you encounter a `Preparing metadata (pyproject.toml): finished with status 'error'` error with maturin/Rust when installing on Python 3.13+, this is due to the `pathlib==1.0.1` dependency from `mega.py` conflicting with the standard library.
+
+**Solution:**
+Use the provided `constraints.txt` file during installation:
+```bash
+pip install --constraint constraints.txt -r requirements.txt
+```
+
+This prevents installation of the `pathlib` backport package, which is unnecessary for Python 3.4+ as pathlib is included in the standard library.
 
 ### MEGA.py Compatibility (Python 3.12+)
 If you encounter an `AttributeError: module 'asyncio' has no attribute 'coroutine'` error when using Python 3.12+, this is due to a compatibility issue with the `tenacity` dependency of `mega.py`. 

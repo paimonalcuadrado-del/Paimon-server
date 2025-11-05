@@ -1,0 +1,4 @@
+# Constraints file to prevent installation of packages that conflict with Python stdlib
+# pathlib is part of the Python standard library since Python 3.4
+# The pathlib==1.0.1 package is an unmaintained backport that causes build errors on Python 3.13+
+pathlib
