@@ -5,11 +5,42 @@ Simple test script for Paimon Cloud Storage Server
 import requests
 import sys
 import time
+import subprocess
+import signal
 from pathlib import Path
 
 # Server configuration
 BASE_URL = "http://localhost:8080"
 AUTH_TOKEN = "test-token-12345"
+SERVER_PROCESS = None
+
+
+def start_server():
+    """Start the server in background"""
+    global SERVER_PROCESS
+    print("Starting server...")
+    SERVER_PROCESS = subprocess.Popen(
+        ["python", "server.py"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    )
+    # Wait for server to start
+    time.sleep(3)
+    print("Server started")
+
+
+def stop_server():
+    """Stop the server"""
+    global SERVER_PROCESS
+    if SERVER_PROCESS:
+        print("\nStopping server...")
+        SERVER_PROCESS.terminate()
+        try:
+            SERVER_PROCESS.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            SERVER_PROCESS.kill()
+        print("Server stopped")
+
 
 def test_ping():
     """Test the /ping endpoint"""
@@ -113,41 +144,49 @@ def main():
     print("Paimon Cloud Storage Server - Test Suite")
     print("=" * 60)
     
-    tests = [
-        test_ping,
-        test_status,
-        test_upload_no_auth,
-        test_upload_invalid_token,
-        test_upload_unsupported_service,
-        test_upload_valid_request,
-    ]
+    # Start server
+    start_server()
     
-    passed = 0
-    failed = 0
-    
-    for test in tests:
-        try:
-            if test():
-                passed += 1
-        except AssertionError as e:
-            print(f"✗ Test failed: {test.__name__}")
-            print(f"  Error: {e}")
-            failed += 1
-        except Exception as e:
-            print(f"✗ Test error: {test.__name__}")
-            print(f"  Error: {e}")
-            failed += 1
-    
-    print("\n" + "=" * 60)
-    print(f"Tests passed: {passed}/{len(tests)}")
-    print(f"Tests failed: {failed}/{len(tests)}")
-    print("=" * 60)
-    
-    if failed > 0:
-        sys.exit(1)
-    else:
-        print("\n✓ All tests passed!")
-        sys.exit(0)
+    try:
+        tests = [
+            test_ping,
+            test_status,
+            test_upload_no_auth,
+            test_upload_invalid_token,
+            test_upload_unsupported_service,
+            test_upload_valid_request,
+        ]
+        
+        passed = 0
+        failed = 0
+        
+        for test in tests:
+            try:
+                if test():
+                    passed += 1
+            except AssertionError as e:
+                print(f"✗ Test failed: {test.__name__}")
+                print(f"  Error: {e}")
+                failed += 1
+            except Exception as e:
+                print(f"✗ Test error: {test.__name__}")
+                print(f"  Error: {e}")
+                failed += 1
+        
+        print("\n" + "=" * 60)
+        print(f"Tests passed: {passed}/{len(tests)}")
+        print(f"Tests failed: {failed}/{len(tests)}")
+        print("=" * 60)
+        
+        if failed > 0:
+            return 1
+        else:
+            print("\n✓ All tests passed!")
+            return 0
+    finally:
+        stop_server()
+
 
 if __name__ == "__main__":
-    main()
+    exit_code = main()
+    sys.exit(exit_code)
