@@ -47,13 +47,13 @@ Build fails on Render with Python 3.13 due to pathlib dependency conflict.
 
 **Solution:**
 The repository includes a `render.yaml` configuration file that:
-1. Specifies Python 3.12.3 (more stable for this application)
+1. Specifies Python 3.11.4 (stable version with good compatibility)
 2. Uses the constraints file during installation
 3. Configures proper health checks
 
 **Manual Configuration (if not using render.yaml):**
 - **Build Command:** `pip install --constraint constraints.txt -r requirements.txt`
-- **Python Version:** 3.12.3 or 3.11.x
+- **Python Version:** 3.11.4 or 3.11.x
 - **Start Command:** `gunicorn -w 4 -k uvicorn.workers.UvicornWorker server:app --bind 0.0.0.0:$PORT`
 
 ### Render ModuleNotFoundError: No module named 'your_application'
@@ -116,7 +116,7 @@ services:
     startCommand: gunicorn -w 4 -k uvicorn.workers.UvicornWorker server:app --bind 0.0.0.0:$PORT
     envVars:
       - key: PYTHON_VERSION
-        value: 3.12.3
+        value: "3.11.4"
       - key: AUTH_TOKEN
         sync: false
       - key: MEGA_EMAIL
